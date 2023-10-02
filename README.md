@@ -31,7 +31,7 @@ the ui will auto refresh every second, so just wait for the victim to connect ba
 ### UI usage
 if your target disconnects, or you just want to delete the shell, select it by clicking on the box itself, and entering `!delete` in the mutli-exec box in the top left of the ui - eventually, this will be a button or key
 
-to communicate with your target, just press the big connect button - you CAN'T miss it
+to communicate with your target, just press the big connect button - you CAN'T miss it  
 as of right now, the only way to go back from the terminal to the main menu is with the back button
 
 i think everything else is pretty simple to use, so nothing much to worry about
