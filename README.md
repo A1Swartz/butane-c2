@@ -39,6 +39,7 @@ i think everything else is pretty simple to use, so nothing much to worry about
 # dev notes
 ### current actually supported communication methods
 - NCAT (basic socket)
+- HoaxShell
 
 ### to add
 - meterpreter
