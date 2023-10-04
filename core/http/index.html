@@ -13,7 +13,7 @@
             font-family: monospace;
         }
 
-        input[type=text] {
+        input[type=text],textarea {
             background-color: #363636;
             border-radius: 4px;
             color: white;
@@ -142,11 +142,19 @@
                 transform: translateY(1px);
             }
 
+        .message {
+            justify-content: center;
+            align-items: center;
+            margin-top: 7.5%;
+            font-family: 'Roboto', sans-serif;
+        }
+
         select {
             background-color: #363636 !important;
             color: white;
-            border-radius: 4px;
+            border-radius: 2px;
             border-color: #646464;
+            font-family: 'Segoe UI'
         } select option {
             color: white;
             background-color: #363636 !important;
@@ -189,11 +197,30 @@
     <div class="box-container">
         <div class="box" style="float:left; width: 25%">
             <h1>welcome</h1>
-            <div style="height: 50%">
+            <div style="height: 7.5%">
                 <span>
                     some text
                 </span>
             </div>
+
+            <hr style="color: #484848; background-color: #484848; height: 2px;">
+
+            <div>
+                <span>generate payload</span>
+                <select style="margin-left: 8px; float:right;" id="payload-dropdown"></select>
+                <select style="margin-left: 8px; float:right;" id="shell-dropdown">
+                    <option value="powershell">powershell</option>
+                    <option value="bash">bash</option>
+                    <option value="sh">sh</option>
+                    <option value="/bin/sh">/bin/sh</option>
+                    <option value="/bin/bash">/bin/bash</option>
+                    <option value="cmd">cmd</option>
+                    <option value="zsh">zsh</option>
+                </select>
+                <button style="float:right; padding: 2px; padding-bottom: 0;" class="tiny-button" id="payload-refresh"><img style="height: 18px" src="/refresh.png"></button>
+            </div>
+            <br>
+            <textarea id="payloadGen" style="height: 25%; width: 100%"></textarea>
 
             <hr style="color: #484848; background-color: #484848; height: 2px;">
 
@@ -227,13 +254,14 @@
             <div style="float: left; width: 100%; height: 97.5%">
                 <h2>listener:</h2>
 
-                <h1 id="listenerIP">192.168.0.0:6940</h1>
+                <h1 id="listenerIP" style="margin: 1px">192.168.0.0:6940</h1>
+                <h2 id="listenerIP2" style="margin: 1px">192.168.0.0:6940</h2>
 
                 <h2>supports:</h2>
                 <ul>
                     <li>meterpreter</li>
                     <li>basic</li>
-                    <li>pwncat</li>
+                    <li>HoaxShell</li>
                 </ul>
             </div>
         </div>
@@ -257,7 +285,9 @@
 
         <h1 style="padding-left: 8px">victims</h1>
 
-        <div id="boxtainer"></div>
+        <div id="boxtainer">
+            <h1 class="message" align="center" id="message">loading..</h1>
+        </div>
 
     </div>
     <script>
@@ -347,12 +377,13 @@
         });
     </script>
     <script>
-        const selectedArray = []
+        var selectedArray = []
         var victimArray = []
         var ouiArray = []
         const container = document.getElementById('boxtainer');
         var mostRecentData = ""
         var haltCreation = false
+        var removedMsg = false
 
         String.prototype.formatUnicorn = String.prototype.formatUnicorn ||
         function () {
@@ -513,6 +544,16 @@
             return false;
         }
 
+        function isHX(value) {
+            var payloads = ["hoax-cURL", "hoax-iex", "hoax-iex-constrained", "hoax-iex-outfile", "hoax-iex-const-out"]
+            for (var i = 0; i < payloads.length; i++) {
+                if (payloads[i] == value) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         function generateRandomColor() {
             var r = Math.floor(Math.random() * 155);
             var g = Math.floor(Math.random() * 155);
@@ -520,7 +561,6 @@
 
             return `rgb(${r},${g},${b})`;
         }
-
 
         function updateData() {
             var xhr = new XMLHttpRequest();
@@ -535,6 +575,13 @@
                 var disconnected = 0
 
                 mostRecentData = jsonData
+
+                if (Object.keys(jsonData).length >= 1 && removedMsg == false) {
+                    document.getElementById("boxtainer").removeChild(document.getElementById("message"))
+                    removedMsg = true
+                } else if (Object.keys(jsonData).length == 0 && removedMsg == false) {
+                    document.getElementById("message").innerHTML = "no clients :("
+                }
                 
                 for (var i=0; i<Object.keys(jsonData).length; i++) {
                     var uid = Object.keys(jsonData)[i]
@@ -636,9 +683,26 @@
         xhr.onload = function() {
             var jsonData = JSON.parse(xhr.responseText)
             document.getElementById("listenerIP").innerHTML = jsonData["listener"] + ":" + jsonData["port"]
+            document.getElementById("listenerIP2").innerHTML = "HX: " + jsonData["listener"] + ":" + (parseInt(jsonData["port"]) + 1)
         };
 
         xhr.send();
+
+        var xhrPL = new XMLHttpRequest();
+        xhrPL.open('GET', '/api/generate/list', true);
+        xhrPL.onload = function() {
+            var jsonData = JSON.parse(xhrPL.responseText)
+            var dropdown = document.getElementById("payload-dropdown")
+            for (var i=0; i<jsonData.payloads.length; i++) {
+                var selection = document.createElement('option')
+                selection.value = jsonData.payloads[i]
+                selection.innerHTML = jsonData.payloads[i]
+
+                dropdown.appendChild(selection)
+            }
+        };
+
+        xhrPL.send();
 
         //updateData() // first update to populate most recent
 
@@ -656,6 +720,8 @@
                             container.removeChild(document.getElementById(selectedArray[i]+"_DIV"));
                             updateData();
                         }
+                        selectedArray = []
+                        document.getElementById("hosts-1").innerHTML = "async execute command on " + selectedArray.length.toString() + " hosts"
                     };
 
                     xhr.send(JSON.stringify({
@@ -703,6 +769,38 @@
             }
 
         })
+
+        
+        function updatePayload() {
+            var dropVal = document.getElementById('payload-dropdown').value
+            if(isHX(dropVal)) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/generate/hoaxshell', true);
+                xhr.onload = function() {
+                    var jsonData = JSON.parse(xhr.responseText)
+                    document.getElementById("payloadGen").value = jsonData["original"]
+                };
+
+                xhr.send(JSON.stringify({"payload": dropVal}));
+            } else {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/generate/payload', true);
+                xhr.onload = function() {
+                    var jsonData = JSON.parse(xhr.responseText)
+                    document.getElementById("payloadGen").value = jsonData["command"]
+                };
+
+                xhr.send(JSON.stringify({"payload": dropVal, "shell": document.getElementById("shell-dropdown").value}));
+            }
+            document.getElementById("payloadGen").value = "asking server to generate payload...";
+        }
+
+        document.getElementById('payload-dropdown').onchange = function () {
+            updatePayload()
+        }
+        document.getElementById('payload-refresh').onclick = function () {
+            updatePayload()
+        }
 
         setInterval(updateData, 1000);
 
