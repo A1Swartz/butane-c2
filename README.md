@@ -1,4 +1,4 @@
-# butane-c2
+9# butane-c2
 an html reverse shell c2, supporting most communication methods, like ncat, meterpreter, and is even able to be a keylogger c2
 
 ***
@@ -76,7 +76,7 @@ please don't ask in the worst way possible, which would be something like this:
 add support how? what do i do? i dont even have cobalt strike? what features do you want?  
 a good way instead, would be something like this  
 
-> "can you add support for cobalt strike DNS communication? maybe even add HTTP(s) support for communication? maybe something like this? (imagine a link to their documentation is here)"  
+> "can you add support for cobalt strike DNS beacons? maybe even add HTTP(s) support for communication? maybe something like this? (imagine a link to their documentation is here)"  
 
 this would actually help me, and wouldn't get you ignored or closed for being stale - linking documentation or an example of something you want is SUPER useful, because i personally hate researching
 
