@@ -1,5 +1,5 @@
 # butane-c2
-an html reverse shell c2, supporting most communication methods, like ncat, meterpreter, and is even able to be a keylogger c2
+an html reverse shell c2, supporting most communication methods, like ncat, and is even able to be a keylogger c2
 
 ***
 
@@ -46,21 +46,21 @@ i think everything else is pretty simple to use, so nothing much to worry about
 - pwncat
   
 ***
-
-### features TBD (ranking from most important to least)
-- ACTUAL secure login system (!!!!!!!!)
+### features from TBD that are done
+- login system
 - directory explorer
 - file downloader
+- make the control ui better
+### features TBD (ranking from most important to least)
 - logs
 - stages (for a staged attack)
-- macros
-  - if macros, for example if a mac starts with `00:11:22` execute this, else execute that
-- being able to change the port
-- keylogging port
+  - macros
+    - if macros, for example if a mac starts with `00:11:22` execute this, else execute that
+- keylogging server
   - run a seperate socket server that will log all data recieved into a gzip compressed text file, for keylogging
   - i think the legality of the project will dive hard with this
 - plugins
-- make the control ui better
+- being able to change the port
 
 # contributing
 you don't have to contribute at all, but if you do decide to, try to pick one part to work on (ex: api, frontend ui, backend shell controller)  
