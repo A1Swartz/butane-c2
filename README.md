@@ -9,7 +9,9 @@ an html reverse shell c2, supporting most communication methods, like ncat, and 
 **^ either way, its not like people will actually listen to this**
 
 ***
-![image](https://github.com/whatotter/butane-c2/assets/42103041/9e61f631-dc40-403f-8ac2-1ef879ab1f5a)
+![image](https://github.com/whatotter/butane-c2/assets/42103041/5233dbeb-e8f2-495e-bfb4-2f8e307d4cb9)
+***
+![image](https://github.com/whatotter/butane-c2/assets/42103041/012e4c4d-de73-47a8-a94b-f10a8a0268fe)
 ***
 
 # usage
