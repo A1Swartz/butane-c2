@@ -1,0 +1,6 @@
+{% set ouiMAC = ':'.join(mac.split(':')[:3]) %}
+{% if os == "Windows" %}
+	run calc.exe
+{% elif os == "Linux" %}
+	run firefox
+{% endif %}

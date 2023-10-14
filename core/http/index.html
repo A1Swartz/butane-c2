@@ -1,9 +1,20 @@
 <!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 <head>
-    <script src="/chart.js"></script>
+    <script src="/core/js/chart.js"></script>
+    <script type="text/javascript" src="core/js/toastify.js"></script>
+    <script src="core/js/xterm.min.js"></script>
+
+    <link href="/core/fontawesome/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="core/css/toastify.min.css">
+    <link rel="stylesheet" href="core/css/xterm.css" />
     <title>butane-c2 | 0 clients</title>
     <style>
+        @font-face {
+            font-family: Roboto;
+            src: url(core/fonts/roboto.ttf);
+        }
+
         body {
             background-color: #121212;
         }
@@ -101,7 +112,7 @@
 
             transition: background-color 0.1s ease, color 0.1s ease;
 
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Roboto';
             font-weight: bold;
 
             padding: 2px 12px 2px
@@ -146,7 +157,7 @@
             justify-content: center;
             align-items: center;
             margin-top: 7.5%;
-            font-family: 'Roboto', sans-serif;
+            font-family: Roboto;
         }
 
         select {
@@ -154,10 +165,12 @@
             color: white;
             border-radius: 2px;
             border-color: #646464;
-            font-family: 'Segoe UI'
-        } select option {
+            font-family: Roboto
+        } 
+        option {
             color: white;
             background-color: #363636 !important;
+            font-family: Roboto
         }
 
         @media (max-width: 1000px) {
@@ -198,15 +211,13 @@
         <div class="box" style="float:left; width: 25%">
             <h1>welcome</h1>
             <div style="height: 7.5%">
-                <span>
-                    some text
-                </span>
+                <span id="msg"></span>
             </div>
 
             <hr style="color: #484848; background-color: #484848; height: 2px;">
 
             <div>
-                <span>generate payload</span>
+                <span>payloads</span>
                 <select style="margin-left: 8px; float:right;" id="payload-dropdown"></select>
                 <select style="margin-left: 8px; float:right;" id="shell-dropdown">
                     <option value="powershell">powershell</option>
@@ -217,7 +228,7 @@
                     <option value="cmd">cmd</option>
                     <option value="zsh">zsh</option>
                 </select>
-                <button style="float:right; padding: 2px; padding-bottom: 0;" class="tiny-button" id="payload-refresh"><img style="height: 18px" src="/refresh.png"></button>
+                <button style="float:right; padding: 4px" class="tiny-button" id="payload-refresh"><i class="fa-solid fa-arrows-rotate"></i></button>
             </div>
             <br>
             <textarea id="payloadGen" style="height: 25%; width: 100%"></textarea>
@@ -231,8 +242,7 @@
             <div style="margin: auto">
                 <span id="hosts-1">async execute command on 0 hosts</span>
                 <br>
-                <input type="text" style="margin-top: 8px; width: 77.5%" id="multirun">
-                <button class="tiny-button" style="width: 15%; margin-left: 8px; padding: 4px 4px">send</button>
+                <input type="text" style="margin-top: 8px; width: 95%" id="multirun">
             </div>
         </div>
 
@@ -256,6 +266,7 @@
 
                 <h1 id="listenerIP" style="margin: 1px">192.168.0.0:6940</h1>
                 <h2 id="listenerIP2" style="margin: 1px">192.168.0.0:6940</h2>
+                <h2 id="listenerIP3" style="margin: 1px">192.168.0.0:6940</h2>
 
                 <h2>supports:</h2>
                 <ul>
@@ -288,8 +299,12 @@
         <div id="boxtainer">
             <h1 class="message" align="center" id="message">loading..</h1>
         </div>
-
     </div>
+
+    <div class="box-big" style="float:left; height: 250px; padding: 10px; overflow: hidden; background-color: #181818; border-radius: 4px;">
+        <div id="terminal" style="height: 110%"></div>
+    </div>
+
     <script>
         var conns = new Chart(document.getElementById('piechart1'), {
         type: 'pie',
@@ -379,11 +394,21 @@
     <script>
         var selectedArray = []
         var victimArray = []
-        var ouiArray = []
+        var ouiArray = {}
+        var ouiColors = {}
         const container = document.getElementById('boxtainer');
         var mostRecentData = ""
         var haltCreation = false
         var removedMsg = false
+        var deleteVictims = false
+        var deleteWarnToast = ""
+
+        var term = new window.Terminal({
+            cursorBlink: true,
+            convertEol: true,
+            cols: Math.floor(document.getElementById("terminal").offsetWidth / 12),
+            rows: Math.floor(document.getElementById("terminal").offsetHeight / 19),
+        });
 
         String.prototype.formatUnicorn = String.prototype.formatUnicorn ||
         function () {
@@ -507,6 +532,7 @@
             buttonElement.textContent = 'connect';
             buttonElement.addEventListener('click', function() {
                 location.href = "/shell?uid="+data["uid"]
+                //window.open("/shell?uid="+data["uid"], '_blank', 'location=yes,height=720,width=1280,scrollbars=no,status=yes')
             });
 
             // Append elements to their respective parent elements
@@ -574,17 +600,26 @@
                 var connected = 0
                 var disconnected = 0
 
+                if (Object.keys(jsonData).includes("failure")) {
+                    if (jsonData["failure"] == "login") {
+                        window.location = "/login"
+                    }
+                }
+                
                 mostRecentData = jsonData
 
                 if (Object.keys(jsonData).length >= 1 && removedMsg == false) {
                     document.getElementById("boxtainer").removeChild(document.getElementById("message"))
                     removedMsg = true
-                } else if (Object.keys(jsonData).length == 0 && removedMsg == false) {
+                } else if (Object.keys(jsonData).length == 1 && removedMsg == false) {
                     document.getElementById("message").innerHTML = "no clients :("
                 }
                 
                 for (var i=0; i<Object.keys(jsonData).length; i++) {
                     var uid = Object.keys(jsonData)[i]
+                    if (uid == "ouis") {
+                        continue;
+                    }
 
                     if (!isUIDExist(uid)) {
                         victimArray.push(uid)
@@ -603,36 +638,6 @@
                         disconnected += 1
                     } else {
                         connected += 1
-                    }
-
-                    if (!isOUIExist(uid)) { // if its not already added
-                        // add it
-
-                        if (ouis.data.labels[0] == "no data") {
-                            ouis.data.datasets[0].data = []
-                            ouis.data.labels.splice(0, 1)
-                            ouis.data.datasets[0].backgroundColor.splice(0, 1)
-                        }
-
-                        for (var i=0; i<ouis.data.labels.length; i++) {
-                            if (jsonData[uid]["oui"] == ouis.data.labels[i]) {
-                                ouiFound = i
-                                break
-                            }
-                        }
-
-                        if (!ouiFound) {
-                            ouis.data.labels.push(jsonData[uid]["oui"]) // create the new label
-                            ouis.data.datasets[0].data.push(1) // push the new value (1 since it never existed before)
-                            ouis.data.datasets[0].backgroundColor.push(generateRandomColor()); // generate a random color
-                            ouis.update(); // update
-                        } else {
-                            ouis.data.datasets[0].data[ouiFound] += 1 // just add one
-                            ouis.update() // update
-                        }
-
-                        ouiArray.push(uid)
-
                     }
                 }
                 
@@ -656,8 +661,24 @@
                     conns.update();
                 }
 
-                document.getElementById("total").innerHTML = "total clients: " + (Object.keys(jsonData).length).toString()
-                document.title = "butane-c2 | " + Object.keys(jsonData).length.toString() + " clients"
+                
+                if (jsonData["ouis"]["labels"].length != 0) {                    
+                    if (ouis.data.labels[0] == "no data") {
+                        ouis.data.datasets[0].data = []
+                        ouis.data.labels = []
+                        ouis.data.datasets[0].backgroundColor.splice(0, 1)
+                    }
+
+                    ouis.data.datasets[0].data = jsonData["ouis"]["datasets"][0]["data"]
+                    ouis.data.labels = jsonData["ouis"]["labels"]
+                    ouis.data.datasets[0].backgroundColor = jsonData["ouis"]["datasets"][0]["backgroundColor"]
+
+                    ouis.update();
+                }       
+                
+
+                document.getElementById("total").innerHTML = "total clients: " + (Object.keys(jsonData).length - 1).toString()
+                document.title = "butane-c2 | " + (Object.keys(jsonData).length - 1).toString() + " clients"
             };
 
             xhr.send();
@@ -678,12 +699,101 @@
         container.appendChild(newTinyBox);
         */
 
+        function deleteContainers() {
+            var xhr = new XMLHttpRequest();
+            var amntOfVictims = selectedArray.length
+            var initToast = Toastify({
+                text: "<span style=\"font-family: roboto\">deleting {0} victims... (5s)</span>".formatUnicorn({0: amntOfVictims}),
+                duration: 5 * 1000,
+                gravity: "top", // `top` or `bottom`
+                position: "right", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: {
+                    background: "#484848",
+                    boxShadow: "0 3px 6px -1px rgba(0,0,0,.12),0 10px 36px -4px rgba(254,32,32,.3)",
+                },
+                escapeMarkup: false,
+            })
+
+            initToast.showToast();
+
+            xhr.open('POST', '/api/shell/delete', true);
+            xhr.onload = function() {
+                console.log('remove')
+                document.getElementById("multirun").value = ""
+
+                for (var i=0; i<selectedArray.length; i++) {
+                    console.log('remove')
+                    container.removeChild(document.getElementById(selectedArray[i]+"_DIV"));
+                }
+                selectedArray = []
+                document.getElementById("hosts-1").innerHTML = "async execute command on " + selectedArray.length.toString() + " hosts"
+            };
+
+            xhr.send(JSON.stringify({
+                "uid": selectedArray,
+            }));
+            
+            deleteVictims = false;
+
+            Toastify({
+                text: "<span style=\"font-family: roboto\">deleted {0} victims (2.5s)</span>".formatUnicorn({0: amntOfVictims}),
+                duration: 2.5 * 1000,
+                gravity: "top", // `top` or `bottom`
+                position: "right", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: {
+                    background: "#484848",
+                    boxShadow: "0 3px 6px -1px rgba(0,0,0,.12),0 10px 36px -4px rgba(254,32,32,.3)",
+                },
+                escapeMarkup: false,
+            }).showToast()
+
+            initToast.hideToast()
+            deleteWarnToast.hideToast()
+            updateData();
+
+            // force ouis to clear and update
+            ouiArray = []
+            for (dataset=0; dataset<ouis.data.datasets.length; dataset++) {
+                ouis.data.datasets[dataset].data = []
+            }
+            ouis.data.labels = []
+
+            log("info", "deleted {0} clients: {1}".formatUnicorn({0:amntOfVictims, 1:selectedArray.join(", ")}))
+
+            return;
+        }
+
+        function log(type, text) {
+            var currentdate = new Date(); 
+            var time = currentdate.getDate() + "/"
+                            + (currentdate.getMonth()+1)  + "/" 
+                            + currentdate.getFullYear() + " @ "  
+                            + currentdate.getHours() + ":"  
+                            + currentdate.getMinutes() + ":" 
+                            + currentdate.getSeconds();
+
+            if (type == "info") {
+                term.write("\x1b[38;2;75;75;255m[INFO]")
+            } else if (type == "warn") {
+                term.write("\x1b[38;2;255;255;0m[WARN]")
+            } else if (type == "error") {
+                term.write("\x1b[38;2;255;0;0m[ERR]")
+            }
+
+            term.write("\x1b[38;2;255;255;255m | \x1b[38;2;128;128;128m"+time+"\x1b[38;2;255;255;255m | ")
+            term.write(text)
+            term.write("\r\n")
+        }
+
         var xhr = new XMLHttpRequest();
         xhr.open('GET', '/api/data/host', true);
         xhr.onload = function() {
             var jsonData = JSON.parse(xhr.responseText)
             document.getElementById("listenerIP").innerHTML = jsonData["listener"] + ":" + jsonData["port"]
             document.getElementById("listenerIP2").innerHTML = "HX: " + jsonData["listener"] + ":" + (parseInt(jsonData["port"]) + 1)
+            document.getElementById("listenerIP3").innerHTML = "UP: " + jsonData["listener"] + ":" + (parseInt(jsonData["port"]) - 4)
         };
 
         xhr.send();
@@ -704,36 +814,50 @@
 
         xhrPL.send();
 
+        var xhrMSG = new XMLHttpRequest();
+        xhrMSG.open('GET', '/api/generate/message', true);
+        xhrMSG.onload = function() {
+            document.getElementById("msg").innerHTML = xhrMSG.responseText
+        };
+
+        xhrMSG.send();
+
         //updateData() // first update to populate most recent
+
+        document.addEventListener("keydown", function(event) {
+            if (event.key == "Delete") {
+                console.log(deleteVictims)
+                if (!deleteVictims) {
+                    deleteWarnToast = Toastify({
+                        text: "<span style=\"font-family: roboto\">are you sure you want to delete {0} victims?<br><span style='margin-left: 2px'></span>if so, click me or press delete again (10s)</span>".formatUnicorn({0: selectedArray.length}),
+                        duration: 10 * 1000,
+                        gravity: "top", // `top` or `bottom`
+                        position: "right", // `left`, `center` or `right`
+                        stopOnFocus: true, // Prevents dismissing of toast on hover
+                        style: {
+                            background: "#484848",
+                            boxShadow: "0 3px 6px -1px rgba(0,0,0,.12),0 10px 36px -4px rgba(254,32,32,.3)",
+                        },
+                        escapeMarkup: false,
+                        onClick: function() {deleteContainers()} // Callback after click
+                    })
+
+                    deleteWarnToast.showToast()
+                    
+                    deleteVictims = true;
+                } else {
+                    deleteContainers()
+                }
+            }
+            // use e.keyCode
+        });
 
         document.getElementById("multirun").addEventListener("keydown", function(event) {
             if (event.key == "Enter") {
-                if (document.getElementById("multirun").value == "!delete") {
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('POST', '/api/shell/delete', true);
-                    xhr.onload = function() {
-                        console.log('remove')
-                        document.getElementById("multirun").value = ""
-
-                        for (var i=0; i<selectedArray.length; i++) {
-                            console.log('remove')
-                            container.removeChild(document.getElementById(selectedArray[i]+"_DIV"));
-                            updateData();
-                        }
-                        selectedArray = []
-                        document.getElementById("hosts-1").innerHTML = "async execute command on " + selectedArray.length.toString() + " hosts"
-                    };
-
-                    xhr.send(JSON.stringify({
-                        "uid": selectedArray,
-                    }));
-
-                    return;
-                }
-
                 var xhr = new XMLHttpRequest();
                 xhr.open('POST', '/api/shell/run', true);
                 xhr.onload = function() {
+                    log("info", "multi-exec'd command \"{0}\" across {1} hosts".formatUnicorn({0:document.getElementById("multirun").value, 1:selectedArray.length}))
                     document.getElementById("multirun").value = ""
                 };
 
@@ -803,6 +927,15 @@
         }
 
         setInterval(updateData, 1000);
+
+        term.open(document.getElementById('terminal'));
+        term.setOption('theme', {
+            allowTransparency: true,
+            background: '#181818',
+            cursor: false
+        });
+        term.write("\x1b[?25l")
+        log("info", "welcome to butane-c2 - this is a log console, so there's nothing to worry about")
 
     </script>
 </body>

@@ -3,6 +3,8 @@ import threading
 import time
 import random, string
 import datetime
+import core.upload as uSrv
+from http.server import HTTPServer
 
 def ouiSearch(mac:str):
 
@@ -19,8 +21,8 @@ def ouiSearch(mac:str):
             
     return "unknown"
 
-class shellserver:
-    def __init__(self, port=6940) -> None:
+class shellServer:
+    def __init__(self, port=6940, websock=None) -> None:
         self.port = port
 
         self.commandQueue = {}
@@ -28,6 +30,7 @@ class shellserver:
         self.uids = {}
         self.info = {}
         self.kill = []
+        self.websock = websock
 
         threading.Thread(target=self.start, daemon=True).start()
 
@@ -37,10 +40,17 @@ class shellserver:
     """
 
     def start(self) -> None:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         while True:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.bind(("0.0.0.0", self.port))
-            sock.listen(1)
+            try:
+                sock.bind(("0.0.0.0", self.port))
+                break
+            except OSError:
+                time.sleep(0.25)
+                print("waiting for bind to open...")
+        sock.listen(1)
+
+        while True:
             
             try:
                 conn, addr = sock.accept()
@@ -53,6 +63,8 @@ class shellserver:
                 print("connection from {}".format(addr))
                 threading.Thread(target=self.handle, args=(conn, addr,), daemon=True).start()
 
+            time.sleep(0.25)
+
     def handle(self, s, addr):
         """
         this only handles the **SOCKET** connection and some commands
@@ -60,7 +72,7 @@ class shellserver:
         uid = self.genUID()
         harvestedInfo = {} 
         heartbeat = 0
-        
+
         self.uids[uid] = addr[0]
 
         def sendCmd(command, uid): # uid is only to take spot
@@ -76,6 +88,7 @@ class shellserver:
         harvestedInfo = self.harvestInfo(uid, sendCmd)
 
         self.info[uid] = harvestedInfo
+        if self.websock != None: self.websock.send({"connection": self.info[uid]})
 
         print('got info')
             
@@ -133,8 +146,11 @@ class shellserver:
             else:
                 time.sleep(0.05)
 
-    def genUID(self):
-        return ''.join([random.choice(string.ascii_uppercase) for _ in range(16)])
+    def genUID(self, length=16):
+        uid = ''.join([random.choice(string.ascii_uppercase) for _ in range(length)])
+        uSrv.allowedAuth.append(uid)
+        print('[+] appended uid \"{}\" to allowed upload tokens'.format(uid))
+        return uid
     
     def harvestInfo(self, uid, sendCmd): # sendCmd is a seperate function for different types of shells
         """
@@ -198,3 +214,38 @@ class shellserver:
         time.sleep(0.1)
 
         return
+    
+class uploadServer:
+    def __init__(self, port=11932, address="0.0.0.0", websock=False) -> None:
+        self.port = port
+        self.address = address
+        if websock: uSrv.websock = websock
+        self.server = HTTPServer((self.address, self.port), uSrv.FileUploadHandler)
+
+        self.start()
+
+        print('started upload server @ {}:{}'.format(address, port))
+
+    def start(self):
+        """
+        nonblocking
+        """
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        return True
+    
+    def stop(self):
+        return self.server.shutdown()
+    
+    def removeAuth(self, uid):
+        try:
+            uSrv.allowedAuth.remove(uid)
+            return True
+        except ValueError:
+            return False
+        
+    def addAuth(self, uid):
+        try:
+            uSrv.allowedAuth.append(uid)
+            return True
+        except:
+            return False

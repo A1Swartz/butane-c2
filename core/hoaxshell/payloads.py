@@ -1,6 +1,7 @@
 import string
 import random
 import base64
+import core.server as sSrv
 
 # $init$ - initiate
 # $pool$ - where to make the request to view the command pool
@@ -31,7 +32,7 @@ def genPayload(pType:str, ip:str, port:int, method:str="http://",
     
     payload = payloads[pType]
 
-    pid = createUID()
+    pid = sSrv.shellServer.genUID(length=24)
 
     replaces = [
         ("$init$", init),

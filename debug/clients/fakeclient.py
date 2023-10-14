@@ -5,6 +5,24 @@ import time
 import threading
 
 die = False
+threads = []
+routines = [
+    [
+        "bash",
+        "server-%%",
+        "-randMac",
+        "192.168.0.1",
+        "x64"
+    ],
+    [
+        "\n",
+        "DESKTOP-%%",
+        "someone",
+        "-randMac",
+        "192.168.0.1",
+        "x64"
+    ]
+]
 
 def genRandomMac():
     hexStr = "0123456789abcdef"
@@ -28,6 +46,16 @@ def genRandomMac():
     return ''.join(mac[:17])
 
 def listener(sock):
+    routine = random.choice(routines)
+    for x in routine:
+        if x == "-randMac":
+            x = genRandomMac()
+        x = x.replace("%%", ''.join([random.choice("ABCDEFGHIJKLMNOPQRSTUVXWYZ") for _ in range(6)]))
+            
+        print("<<< " + sock.recv(1024).decode("ascii").strip())
+        print(">>> " + x)
+        sock.sendall(x.encode("ascii"))
+
     while True:
         try:
             try:
@@ -52,39 +80,10 @@ def listener(sock):
         except:
             pass
 
-threads = []
-routines = [
-    [
-        "bash",
-        "server-%%",
-        "-randMac",
-        "192.168.0.1",
-        "x64"
-    ],
-    [
-        "\n",
-        "DESKTOP-%%",
-        "someone",
-        "-randMac",
-        "192.168.0.1",
-        "x64"
-    ]
-]
-
 for x in range(int(sys.argv[2])):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(1)
     s.connect(("127.0.0.1", int(sys.argv[1])))
-
-    routine = random.choice(routines)
-    for x in routine:
-        if x == "-randMac":
-            x = genRandomMac()
-        x = x.replace("%%", ''.join([random.choice("ABCDEFGHIJKLMNOPQRSTUVXWYZ") for _ in range(6)]))
-            
-        print("<<< " + s.recv(1024).decode("ascii").strip())
-        print(">>> " + x)
-        s.sendall(x.encode("ascii"))
 
     print("-" * 25)
 
@@ -95,8 +94,6 @@ for x in range(int(sys.argv[2])):
     threads[-1].start()
 
     print("-" * 25)
-    
-    time.sleep(0.25)
 
 print("waiting for last thread to finish...")
 try:
