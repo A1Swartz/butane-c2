@@ -53,11 +53,10 @@ i think everything else is pretty simple to use, so nothing much to worry about
 - directory explorer
 - file downloader
 - make the control ui better
+- stages
+  - this was done with jinja templates
 ### features TBD (ranking from most important to least)
 - logs
-- stages (for a staged attack)
-  - macros
-    - if macros, for example if a mac starts with `00:11:22` execute this, else execute that
 - keylogging server
   - run a seperate socket server that will log all data recieved into a gzip compressed text file, for keylogging
   - i think the legality of the project will dive hard with this
