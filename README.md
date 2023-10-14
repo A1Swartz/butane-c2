@@ -17,9 +17,9 @@ a lightweight, multiplayer, http reverse shell C2, with autorun stages - support
 # usage
 
 ### starting
-install the required packages (so far, literally only flask):  
+install the required packages:  
 ```
-pip install flask
+pip install flask requests flask-socketio python-socketio
 ```
 
 start the main python script, no sudo required: `python3 main.py`  
@@ -27,16 +27,18 @@ start the main python script, no sudo required: `python3 main.py`
 
 open your favorite browser, and navigate to `localhost:80`  
 
-create reverse shells with revshells.com or pentest monkey, and just switch the listener ip and port to the one in the main page  
+create reverse shells with the built in payload generator, revshells.com, or pentest monkey, and just switch the listener ip and port to the one in the main page  
 the ui will auto refresh every second, so just wait for the victim to connect back and for the page to get all victims  
 
 ### UI usage
-if your target disconnects, or you just want to delete the shell, select it by clicking on the box itself, and entering `!delete` in the mutli-exec box in the top left of the ui - eventually, this will be a button or key
+if your target disconnects, or you just want to delete the shell, select it by clicking on the box itself, and then press delete on your keyboard twice
 
 to communicate with your target, just press the big connect button - you CAN'T miss it  
 as of right now, the only way to go back from the terminal to the main menu is with the back button
 
-i think everything else is pretty simple to use, so nothing much to worry about
+i think everything else is pretty simple to use, so nothing much to worry about  
+
+the log console is just there for info, so you dont have to worry about that
 
 # dev notes
 ### current actually supported communication methods
