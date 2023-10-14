@@ -9,9 +9,9 @@ a lightweight, multiplayer, http reverse shell C2, with autorun stages - support
 **^ either way, its not like people will actually listen to this**
 
 ***
-![image](https://github.com/whatotter/butane-c2/assets/42103041/5233dbeb-e8f2-495e-bfb4-2f8e307d4cb9)
+![image](https://github.com/whatotter/butane-c2/assets/42103041/7eb031b5-7156-414d-a1ab-0d338f4efbe5)
 ***
-![image](https://github.com/whatotter/butane-c2/assets/42103041/012e4c4d-de73-47a8-a94b-f10a8a0268fe)
+![image](https://github.com/whatotter/butane-c2/assets/42103041/9518b6ea-bda0-40d2-8242-dd7f033260dd)
 ***
 
 # usage
