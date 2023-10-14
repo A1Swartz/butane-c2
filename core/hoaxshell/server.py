@@ -2,7 +2,7 @@ from flask import Flask, request
 import core.server as sSrv
 import threading
 import time
-import core.hoaxshell.payloads as payloads
+import core.upload as uSrv
 
 hxshl = Flask(__name__)
 

