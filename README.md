@@ -1,5 +1,5 @@
 # butane-c2
-an html reverse shell c2, supporting most communication methods, like ncat
+a lightweight, multiplayer, http reverse shell C2, with autorun stages - supports ncat and hoaxshell
 
 ***
 
