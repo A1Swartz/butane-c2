@@ -207,7 +207,11 @@ def ls():
                         directory[x.strip().split(" ")[-1]] = "folder"
                 
         else: # unix
-            pass
+            print(x)
+            if x[0] == "d":
+                directory[x.strip().split(" ")[-1]] = "folder"
+            elif x[0] == "-":
+                directory[x.strip().split(" ")[-1]] = "file"
 
     if pwd == None:
         pwd = shell.runCommand(a["uid"], "pwd")

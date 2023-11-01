@@ -107,7 +107,7 @@ class shellServer:
 
                 s.sendall(self.commandQueue[uid].encode('ascii'))
                 self.commandQueue.pop(uid)
-                self.responseQueue[uid] = s.recv(2048*16).decode('ascii')
+                self.responseQueue[uid] = s.recv(2048*32).decode('ascii')
                 heartbeat = 0
             else:
                 if heartbeat == 100:
