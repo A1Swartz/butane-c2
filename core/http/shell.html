@@ -234,6 +234,10 @@
 
         function runCommand(terminal, cmd) {
             var xhr = new XMLHttpRequest();
+            if (cmd == "") {
+                return
+            }
+
             disableTerm = true
             xhr.open('POST', '/api/shell/run', true);
             xhr.onload = function() {
@@ -279,10 +283,16 @@
                 }
             };
 
-            xhr.send(JSON.stringify({
-                "uid": gup('uid', false),
-                "pwd": pwd
-            }));
+            if (pwd == "") {
+                xhr.send(JSON.stringify({
+                    "uid": gup('uid', false)
+                }));
+            } else {
+                xhr.send(JSON.stringify({
+                    "uid": gup('uid', false),
+                    "pwd": pwd
+                }));
+            }
         }
 
         function pathJoin(folderPath, filename) {
@@ -305,7 +315,12 @@
         }
 
         function removeLastFolder(path) {
-            return path.replace(/\\/g, '/').substring(0, path.replace(/\\/g, '/').lastIndexOf('/'));
+            var p = path.replace(/\\/g, '/').substring(0, path.replace(/\\/g, '/').lastIndexOf('/'));
+            if (p == "") {
+                return "/"
+            } else {
+                return p
+            }
         }
 
         function changeDir(directory) {

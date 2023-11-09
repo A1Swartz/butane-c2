@@ -141,18 +141,23 @@
                     }).showToast()
                 } else {
                     console.log("success")
-                    Toastify({
-                        text: "<span style=\"font-family: roboto\">logging in..</span>",
-                        duration: 2.5 * 1000,
-                        gravity: "top", // `top` or `bottom`
-                        position: "center", // `left`, `center` or `right`
-                        stopOnFocus: true, // Prevents dismissing of toast on hover
-                        style: {
-                            background: "rgb(32,150,32)",
-                            boxShadow: "0 3px 6px -1px rgba(0,0,0,.12),0 10px 36px -4px rgba(32,254,32,.3)",
-                        },
-                        escapeMarkup: false,
-                    }).showToast()
+
+                    try {
+                        Toastify({
+                            text: "<span style=\"font-family: roboto\">logging in..</span>",
+                            duration: 2.5 * 1000,
+                            gravity: "top", // `top` or `bottom`
+                            position: "center", // `left`, `center` or `right`
+                            stopOnFocus: true, // Prevents dismissing of toast on hover
+                            style: {
+                                background: "rgb(32,150,32)",
+                                boxShadow: "0 3px 6px -1px rgba(0,0,0,.12),0 10px 36px -4px rgba(32,254,32,.3)",
+                            },
+                            escapeMarkup: false,
+                        }).showToast()
+                    } catch {
+                        // pass
+                    }
 
                     window.location = "/"
                 }

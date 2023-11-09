@@ -107,9 +107,22 @@ class shellServer:
 
                 s.sendall(self.commandQueue[uid].encode('ascii'))
                 self.commandQueue.pop(uid)
-                self.responseQueue[uid] = s.recv(2048*32).decode('ascii')
+
+                # recieve
+                d = []
+                while True:
+                    recieved = s.recv(2048*8).decode('ascii')
+                    if recieved.strip()[-1] == "0":
+                        d.append(recieved)
+                        self.responseQueue[uid] = "".join(d)
+                        break
+                    else:
+                        d.append(recieved)
+                    time.sleep(0.05)
+
                 heartbeat = 0
             else:
+                """
                 if heartbeat == 100:
                     self.info[uid]['active'] = False
                     try:
@@ -128,15 +141,18 @@ class shellServer:
                     heartbeat = 0;
                 else:
                     heartbeat += 1
+                """
+                pass
 
             time.sleep(0.05)
 
     def runCommand(self, uid, command, _async=False):
+        data = []
         if _async:
             self.commandQueue[uid] = (command+'\n')
             return
         else:
-            self.commandQueue[uid] = command+'\n'
+            self.commandQueue[uid] = command+';echo 0\n'
 
         while True:
             if uid in list(self.responseQueue.keys()):

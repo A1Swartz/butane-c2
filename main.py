@@ -149,6 +149,9 @@ def runcmd():
     if not isAllowed(request): return {"failure": "login"}
     a = request.get_json(force=True)
 
+    if a["command"].split(" ")[0] in ["curl"]:
+        a["command"] += ";echo 0"
+
     if type(a["uid"]) != list:
         if len(a["uid"]) != 24:
             dta = shell.runCommand(a["uid"], a["command"])
@@ -173,11 +176,14 @@ def ls():
     pwd = a.get("pwd", None)
     files = False
     command = ""
+
+    if pwd == None:
+        pwd = shell.runCommand(a["uid"], "pwd")
     
     if shell.info[a["uid"]]["os"] == "Windows":
         command += "dir"
     else:
-        command += "ls"
+        command += "ls -la"
 
     if pwd != None or pwd != "current":
         command += " "+pwd
@@ -207,14 +213,12 @@ def ls():
                         directory[x.strip().split(" ")[-1]] = "folder"
                 
         else: # unix
-            print(x)
             if x[0] == "d":
+                if (x.strip().split(" ")[-1])[-1] == ".":
+                    continue
                 directory[x.strip().split(" ")[-1]] = "folder"
             elif x[0] == "-":
                 directory[x.strip().split(" ")[-1]] = "file"
-
-    if pwd == None:
-        pwd = shell.runCommand(a["uid"], "pwd")
 
     print(directory)
 
@@ -254,7 +258,7 @@ def hoaxshellPLGen():
     a = request.get_json(force=True)
 
     try:
-        pl = hxPL.genPayload(a["payload"], get_ip(), port+1)
+        pl = hxPL.genPayload(a["payload"], json.loads(open("config.json", "r").read())["ip"], port+1)
         hxSrv.shellData.allowedUIDS.append(pl["payloadId"])
         return pl
     except KeyError:
@@ -274,7 +278,7 @@ def normalPLGen():
         return "invalid payload"
     else:
         b = payloads[a["payload"]]
-        b["command"] = (base64.b64decode(b["command"].encode('ascii')).decode('ascii')).replace("{ip}", get_ip()).replace("{port}", str(port)).replace("{shell}", a.get("shell", "bash")) # LOTTA SPLICING AND COULD'VE PROBABLY BEEN DONE WITH REGEX BUT WHO CARES
+        b["command"] = (base64.b64decode(b["command"].encode('ascii')).decode('ascii')).replace("{ip}", json.loads(open("config.json", "r").read())["ip"]).replace("{port}", str(port)).replace("{shell}", a.get("shell", "bash")) # LOTTA SPLICING AND COULD'VE PROBABLY BEEN DONE WITH REGEX BUT WHO CARES
         return b
     
 @app.route("/api/generate/list", methods=["GET"])

