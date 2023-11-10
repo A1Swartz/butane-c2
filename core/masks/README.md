@@ -1,5 +1,5 @@
 # what's a mask?
-a "mask" in this situation is an html file (could be literally anything actually) with an html comment tag  
+a "mask" in this situation is an html file (could be literally anything actually) with a specific html comment tag  
 
 the comment tag in question is this:
 ```
