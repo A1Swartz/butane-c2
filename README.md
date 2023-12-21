@@ -1,5 +1,5 @@
 # butane-c2
-a lightweight, multiplayer, http reverse shell C2, with autorun stages - supports ncat and hoaxshell
+a lightweight, multiplayer, http reverse shell C2, with autorun stages - supports ncat, hoaxshell and ssl encrypted reverse shells
 
 ***
 

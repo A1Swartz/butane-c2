@@ -3,8 +3,6 @@ a place for executing n stuff w/o having to worry about hoaxshell, etc.
 also for plugins
 """
 import os
-import socket
-import shutil
 import requests
 import json
 

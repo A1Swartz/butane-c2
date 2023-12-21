@@ -120,28 +120,7 @@ class shellServer:
                         d.append(recieved)
                     time.sleep(0.05)
 
-                heartbeat = 0
             else:
-                """
-                if heartbeat == 100:
-                    self.info[uid]['active'] = False
-                    try:
-                        a = sendCmd("echo 1", uid)
-                    except:
-                        self.info[uid]['active'] = 0
-                        break
-                    
-                    if a == "1":
-                        self.info[uid]['active'] = True
-                        self.info[uid]['lastActive'] = datetime.datetime.now().strftime("%H:%M")
-
-                    else:
-                        break
-
-                    heartbeat = 0;
-                else:
-                    heartbeat += 1
-                """
                 pass
 
             time.sleep(0.05)

